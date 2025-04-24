@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# 虛擬環境
+venv/
+.env/
+env/
+
+# IDE 和編輯器
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+
+# 專案特定檔案
+img/*
+!img/.gitkeep
+reports/*
+!reports/.gitkeep
+*.png
