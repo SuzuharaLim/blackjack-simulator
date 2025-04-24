@@ -28,14 +28,16 @@ class BlackjackGUI:
         }
         self.last_update_time = 0
         self.image_cache = None
+        self.start_time = None
         self.settings = {
             'theme': 'flatly',
             'font_size': 12,
             'update_interval': 100
         }
-        self.settings_path = os.path.join('config', 'settings.json')  # 修改：設定檔案路徑
-        self.img_dir = 'img'  # 修改：圖表儲存目錄
-        os.makedirs(self.img_dir, exist_ok=True)  # 修改：確保 img 目錄存在
+        self.settings_path = os.path.join('config', 'settings.json')
+        self.img_dir = 'img'
+        os.makedirs('config', exist_ok=True)  # 確保 config 目錄存在
+        os.makedirs(self.img_dir, exist_ok=True)
         self.expectation_window = None
         self.expectation_table = None
         self.style = None
@@ -45,7 +47,10 @@ class BlackjackGUI:
 
     def load_settings(self):
         try:
-            if os.path.exists(self.settings_path):  # 修改：使用 self.settings_path
+            if not os.path.exists(self.settings_path):
+                with open(self.settings_path, 'w', encoding='utf-8') as f:
+                    json.dump(self.settings, f, ensure_ascii=False, indent=4)
+            else:
                 with open(self.settings_path, 'r', encoding='utf-8') as f:
                     loaded_settings = json.load(f)
                     font_size = loaded_settings.get('font_size', 12)
@@ -56,10 +61,11 @@ class BlackjackGUI:
                     self.settings.update(loaded_settings)
         except Exception as e:
             print(f"載入設定失敗: {e}")
+            self.save_settings()
 
     def save_settings(self):
         try:
-            with open(self.settings_path, 'w', encoding='utf-8') as f:  # 修改：使用 self.settings_path
+            with open(self.settings_path, 'w', encoding='utf-8') as f:
                 json.dump(self.settings, f, ensure_ascii=False, indent=4)
         except Exception as e:
             messagebox.showerror("錯誤", f"儲存設定失敗: {e}")
@@ -77,7 +83,6 @@ class BlackjackGUI:
         try:
             if self.style is None:
                 self.style = ttkb.Style(theme=self.settings['theme'])
-                self.style.configure('custom.Vertical.TScrollbar', width=15)
             else:
                 self.style.theme_use(self.settings['theme'])
         except Exception as e:
@@ -85,7 +90,6 @@ class BlackjackGUI:
             self.settings['theme'] = 'flatly'
             if self.style is None:
                 self.style = ttkb.Style(theme='flatly')
-                self.style.configure('custom.Vertical.TScrollbar', width=15)
             else:
                 self.style.theme_use('flatly')
         
@@ -216,7 +220,6 @@ class BlackjackGUI:
 
     def setup_gui(self):
         self.style = ttkb.Style(theme=self.settings['theme'])
-        self.style.configure('custom.Vertical.TScrollbar', width=15)
         self.root.minsize(800, 600)
         
         self.main_frame = ttkb.Frame(self.root, padding=20)
@@ -386,13 +389,6 @@ class BlackjackGUI:
         )
         self.remaining_cards_label.pack(anchor=tk.W)
         
-        self.shuffle_countdown_label = ttkb.Label(
-            self.stats_frame, 
-            text="洗牌倒計時：0 張", 
-            font=("微軟正黑體", 12)
-        )
-        self.shuffle_countdown_label.pack(anchor=tk.W)
-        
         self.avg_points_label = ttkb.Label(
             self.stats_frame, 
             text="平均點數：0.0", 
@@ -414,6 +410,13 @@ class BlackjackGUI:
         )
         self.total_ev_label.pack(anchor=tk.W)
         
+        self.elapsed_time_label = ttkb.Label(
+            self.stats_frame, 
+            text="經過時間：0.0 秒", 
+            font=("微軟正黑體", 12)
+        )
+        self.elapsed_time_label.pack(anchor=tk.W)
+        
         log_frame = ttkb.LabelFrame(left_frame, text="牌局過程 Log", padding=5)
         log_frame.pack(fill=tk.BOTH, expand=True, pady=5)
         
@@ -432,8 +435,7 @@ class BlackjackGUI:
             log_frame, 
             orient=tk.VERTICAL, 
             command=self.log_text.yview,
-            takefocus=True,
-            style='custom.Vertical.TScrollbar'
+            takefocus=True
         )
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.log_text.config(yscrollcommand=scrollbar.set)
@@ -454,8 +456,8 @@ class BlackjackGUI:
         try:
             window_width = self.image_frame.winfo_width()
             window_height = self.image_frame.winfo_height()
-            max_width = min(800, int(window_width * 0.8))
-            max_height = min(600, int(window_height * 0.8))
+            max_width = min(1200, int(window_width * 0.8))
+            max_height = min(900, int(window_height * 0.8))
             
             img = Image.open(self.current_image_path)
             img_width, img_height = img.size
@@ -463,12 +465,12 @@ class BlackjackGUI:
             new_width = int(img_width * scale)
             new_height = int(img_height * scale)
             
-            if new_width < 400:
-                new_width = 400
-                new_height = int(400 * img_height / img_width)
-            if new_height < 300:
-                new_height = 300
-                new_width = int(300 * img_width / img_height)
+            if new_width < 600:
+                new_width = 600
+                new_height = int(600 * img_height / img_width)
+            if new_height < 450:
+                new_height = 450
+                new_width = int(450 * img_width / img_height)
             
             img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
             photo = ImageTk.PhotoImage(img)
@@ -485,10 +487,10 @@ class BlackjackGUI:
             for item in self.expectation_table.get_children():
                 self.expectation_table.delete(item)
         self.remaining_cards_label.config(text="剩餘牌數：0 張")
-        self.shuffle_countdown_label.config(text="洗牌倒計時：0 張")
         self.avg_points_label.config(text="平均點數：0.0")
         self.bust_rate_label.config(text="爆牌率：0.0%")
         self.total_ev_label.config(text="期望點數總和：0.0")
+        self.elapsed_time_label.config(text="經過時間：0.0 秒")
 
     def update_results(self, strategy, results, logs=None, remaining_cards=None):
         if not self.is_running:
@@ -507,23 +509,25 @@ class BlackjackGUI:
         )
         
         total_cards = sum(remaining_cards.values()) if remaining_cards else 0
-        shuffle_countdown = max(0, 124 - total_cards) if remaining_cards else 0
         avg_points = sum(min(r, 21) for r in results) / len(results) if results else 0
         self.remaining_cards_label.config(text=f"剩餘牌數：{total_cards} 張")
-        self.shuffle_countdown_label.config(text=f"洗牌倒計時：{shuffle_countdown} 張")
         self.avg_points_label.config(text=f"平均點數：{avg_points:.1f}")
         self.bust_rate_label.config(text=f"爆牌率：{bust_rate:.2%}")
+        
+        if self.start_time is not None:
+            elapsed_time = current_time - self.start_time
+            self.elapsed_time_label.config(text=f"經過時間：{elapsed_time:.1f} 秒")
         
         def update_chart():
             try:
                 if self.chart_type.get() == "最終手牌點數分佈":
-                    ResultPlotter.plot_distribution(results, strategy, self.img_dir)  # 修改：傳遞 img_dir
-                    self.current_image_path = os.path.join(self.img_dir, f"{strategy}_distribution.png")  # 修改：使用 os.path.join
+                    ResultPlotter.plot_distribution(results, strategy, self.img_dir)
+                    self.current_image_path = os.path.join(self.img_dir, f"{strategy}_distribution.png")
                 else:
                     aggregated_results = {s: [r for pid in self.simulator.results[s] for r in self.simulator.results[s][pid]] 
                                         for s in self.simulator.results}
-                    ResultPlotter.plot_comparison(aggregated_results, self.img_dir)  # 修改：傳遞 img_dir
-                    self.current_image_path = os.path.join(self.img_dir, "strategy_comparison.png")  # 修改：使用 os.path.join
+                    ResultPlotter.plot_comparison(aggregated_results, self.img_dir)
+                    self.current_image_path = os.path.join(self.img_dir, "strategy_comparison.png")
                 self.resize_images()
             except Exception as e:
                 print(f"圖表更新失敗: {e}")
@@ -572,6 +576,7 @@ class BlackjackGUI:
 
     def start_simulation(self):
         self.is_running = True
+        self.start_time = time.time()
         self.start_button.config(state='disabled')
         self.stop_button.config(state='normal')
         self.clear_log_button.config(state='disabled')
@@ -612,14 +617,14 @@ class BlackjackGUI:
                         try:
                             if self.chart_type.get() == "最終手牌點數分佈":
                                 for strategy in aggregated_results:
-                                    ResultPlotter.plot_distribution(aggregated_results[strategy], strategy, self.img_dir)  # 修改：傳遞 img_dir
+                                    ResultPlotter.plot_distribution(aggregated_results[strategy], strategy, self.img_dir)
                                 if aggregated_results:
-                                    self.current_image_path = os.path.join(self.img_dir, f"{list(aggregated_results.keys())[0]}_distribution.png")  # 修改：使用 os.path.join
+                                    self.current_image_path = os.path.join(self.img_dir, f"{list(aggregated_results.keys())[0]}_distribution.png")
                                 else:
                                     self.current_image_path = None
                             else:
-                                ResultPlotter.plot_comparison(aggregated_results, self.img_dir)  # 修改：傳遞 img_dir
-                                self.current_image_path = os.path.join(self.img_dir, "strategy_comparison.png")  # 修改：使用 os.path.join
+                                ResultPlotter.plot_comparison(aggregated_results, self.img_dir)
+                                self.current_image_path = os.path.join(self.img_dir, "strategy_comparison.png")
                             
                             if self.current_image_path:
                                 self.resize_images()
@@ -648,11 +653,13 @@ class BlackjackGUI:
             self.root.after(0, lambda: self.clear_log_button.config(state='normal'))
             self.root.after(0, lambda: self.progress.stop())
             self.is_running = False
+            self.start_time = None
             
         threading.Thread(target=run_simulations, daemon=True).start()
 
     def stop_simulation(self):
         self.is_running = False
+        self.start_time = None
         self.start_button.config(state='normal')
         self.stop_button.config(state='disabled')
         self.clear_log_button.config(state='normal')
