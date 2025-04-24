@@ -1,119 +1,223 @@
-21點莊家策略模擬器
-這是一個基於 Python 的模擬工具，用於分析和視覺化 21 點（Blackjack）中不同的莊家策略。專案實現了多種策略（基本策略、保守策略、激進策略、自適應策略和高級自適應策略），並提供圖形使用者介面（GUI）來運行模擬、查看即時統計數據並生成分析報告。
-功能
+# 21 點莊家策略模擬器
 
-多種策略：模擬莊家行為，包含五種策略：
-基本策略（17 點停牌）
-保守策略（16 點停牌）
-激進策略（18 點停牌）
-自適應策略（基於爆牌機率）
-高級自適應策略（基於期望值）
+![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)
 
+## 專案概述
 
-圖形介面：使用 tkinter 和 ttkbootstrap 構建互動式控制介面，即時顯示統計數據和視覺化結果。
-即時統計：模擬過程中顯示剩餘牌數、洗牌倒計時、平均點數、爆牌率和期望值。
-視覺化：使用 matplotlib 生成手牌點數分佈直方圖和爆牌率比較柱狀圖。
-分析報告：生成詳細的 Markdown 報告，比較各策略的爆牌率、平均點數和期望值。
-可自訂設定：透過設定視窗調整主題、字型大小和更新間隔，儲存於 config/settings.json。
+**21 點莊家策略模擬器** 是一個基於 Python 和 `ttkbootstrap` 的圖形化應用程式，模擬 21 點（Blackjack）遊戲中莊家的多種策略行為，分析不同策略的爆牌率、手牌點數分佈及剩餘牌的期望值。專案旨在提供一個直觀的工具，幫助使用者研究 21 點的策略效果，並支援動態補牌策略分析（例如 Q 和 K 高期望值時停牌）。主要功能包括即時數值顯示、期望值視窗、按局數排列的 Log，以及當剩餘牌數低於 40% 時回收已用牌並重新洗牌。
 
-安裝
+### 主要功能
 
-複製儲存庫：
-git clone https://github.com/your-username/blackjack-simulator.git
-cd blackjack-simulator
+- **多種莊家策略**：
+  - 基本策略：小於 17 點補牌。
+  - 保守策略：16 點停牌。
+  - 激進策略：18 點停牌。
+  - 自適應策略：基於爆牌概率。
+  - 高級自適應策略：基於剩餘牌期望值。
+- **期望值視窗**：
+  - 彈出視窗顯示每種牌值（A, 2, ..., K）的剩餘張數、出現概率和期望點數貢獻（例如 A=24, 0.08, 0.85）。
+  - 支援所有策略，模擬結束時保留，僅在「清除 Log」或手動關閉時清空。
+- **即時數值區域**：
+  - 主視窗顯示即時計算的數值，包括：
+    - 總剩餘牌數（例如 312 張）。
+    - 洗牌倒計時（距離 ≤ 124 張）。
+    - 平均手牌點數（爆牌計為 0）。
+    - 爆牌率（例如 25.5%）。
+    - 期望點數總和（所有牌值期望值加總）。
+  - 隨模擬進程即時更新。
+- **洗牌邏輯**：
+  - 當剩餘牌數 ≤ 40%（124 張）時，將已用牌放回牌堆並重新洗牌，恢復 312 張。
+  - Log 記錄洗牌事件（例如「牌堆剩餘 124 張，低於 40%，已將用過的牌放回並洗牌」）。
+- **Log 按局數排列**：
+  - 詳細記錄每局手牌過程（初始牌、補牌、最終點數），按「第 X 局：玩家 1、玩家 2」排列。
+  - 支援多玩家（1-10），自動滾動顯示最新內容。
+- **圖表可視化**：
+  - 最終手牌點數分佈（直方圖）。
+  - 各策略爆牌率比較（長條圖）。
+  - 使用 `matplotlib`，支援繁體中文（微軟正黑體）。
+- **設定面板**：
+  - 自訂主題（`flatly`, `darkly`, `litera`）。
+  - 字號調整（8-20）。
+  - 圖表更新間隔（例如 100 局）。
+- **錯誤修復**：
+  - 解決 `AttributeError`, `RuntimeError`, `TclError`, `IndexError`, `ValueError`, `SyntaxError` 等問題。
+  - 確保穩定運行，支援多玩家和大局數模擬。
 
+## 安裝指南
 
-建立虛擬環境（建議）：
-python -m venv venv
-source venv/bin/activate  # Windows 上使用：venv\Scripts\activate
+### 系統要求
+- **作業系統**：Windows, macOS, Linux
+- **Python 版本**：3.8 或更高
+- **字體**：建議安裝微軟正黑體（`msjh.ttc`）以支援繁體中文顯示
 
+### 依賴安裝
+1. 安裝 Python 3.8+（可從 [python.org](https://www.python.org/downloads/) 下載）。
+2. 使用 `pip` 安裝所需依賴：
+   ```bash
+   pip install matplotlib numpy pillow ttkbootstrap
+   ```
+3. 檢查依賴版本，確保兼容性：
+   - `matplotlib>=3.5.0`
+   - `Pillow>=9.0.0`
+   - `ttkbootstrap>=1.10.0`
+   ```bash
+   pip list
+   ```
 
-安裝依賴項：
-pip install -r requirements.txt
+### 克隆專案
+1. 克隆本倉庫至本地：
+   ```bash
+   git clone https://github.com/your-username/blackjack-simulator.git
+   ```
+2. 進入專案目錄：
+   ```bash
+   cd blackjack-simulator
+   ```
 
+## 使用說明
 
-確保字型支援：
+### 啟動程式
+1. 確保所有依賴已安裝，系統字體支援繁體中文。
+2. 運行主程式：
+   ```bash
+   python main.py
+   ```
 
-專案使用微軟正黑體（msjh.ttc）來渲染圖表中的繁體中文文字。請確保系統中已安裝此字型（Windows 預設包含）。若無此字型，程式會自動回退到 sans-serif 字型，但可能影響中文顯示效果。
+### 操作指南
+1. **設定面板**：
+   - 點擊「設定」按鈕，開啟設定視窗：
+     - 選擇主題（`flatly`, `darkly`, `litera`）。
+     - 輸入文字字號（8-20，例如 12）。
+     - 輸入圖表更新間隔（例如 100 局）。
+     - 點擊「應用」或「儲存」，或「恢復預設值」（字號 12）。
+2. **模擬參數**：
+   - 選擇策略（`basic`, `conservative`, `aggressive`, `adaptive`, `advanced`）。
+   - 設置模擬局數（建議 1000 局/玩家）。
+   - 設置模擬人數（1-10，建議 2 以測試輪流）。
+   - 選擇圖表類型（「最終手牌點數分佈」或「爆牌率比較」）。
+   - 勾選「顯示牌局過程 Log」以啟用詳細 Log。
+3. **開始模擬**：
+   - 點擊「開始模擬」，程式將運行模擬並即時更新：
+     - 主視窗顯示爆牌率、即時數值（剩餘牌數、洗牌倒計時、平均點數、爆牌率、期望點數總和）、Log 和圖表。
+     - 期望值視窗彈出，顯示牌值、張數、概率、期望值（例如 A=24, 0.08, 0.85）。
+   - 可點擊「停止模擬」中斷，或等待模擬完成。
+4. **查看結果**：
+   - 模擬結束後，主視窗保留最終圖表、Log 和即時數值。
+   - 期望值視窗保留最終牌分佈，點擊「清除 Log」清空或手動關閉。
+   - 檢查運行目錄中的報告（`analysis_report.md`）、圖表（PNG 檔案）和設定（`settings.json`）。
 
+### 範例操作
+```plaintext
+1. 啟動程式：python main.py
+2. 設定：
+   - 主題：flatly
+   - 字號：12
+   - 更新間隔：100 局
+3. 模擬參數：
+   - 策略：basic, advanced
+   - 局數：1000
+   - 人數：2
+   - 圖表：最終手牌點數分佈
+   - 勾選顯示 Log
+4. 點擊「開始模擬」，觀察：
+   - 即時數值：剩餘牌數 ≈ 312 張，洗牌倒計時 ≈ 188 張，平均點數 ≈ 15.0，爆牌率 ≈ 25%，期望點數總和 ≈ 10.5
+   - 期望值視窗：A=24, 0.08, 0.85；10=96, 0.31, 3.08
+   - Log：第 1 局：玩家 1 初始手牌 ['10♠', '5♦']，最終點數 15...
+5. 模擬結束，檢查圖表和報告。
+```
 
+## 測試建議
 
-使用方法
+1. **驗證即時數值區域**：
+   - 模擬 100 局，檢查：
+     - 總剩餘牌數：初始 ≈ 312 張，洗牌後重置。
+     - 洗牌倒計時：初始 ≈ 188 張，接近 0 時觸發洗牌。
+     - 平均手牌點數：合理範圍（例如 15.0-17.0）。
+     - 爆牌率：與主視窗一致（例如 25.5%）。
+     - 期望點數總和：與期望值視窗總和一致（例如 10.5）。
+   - 確認數值即時更新，無延遲。
+2. **驗證期望值視窗**：
+   - 檢查表格：
+     - 期望值正確（例如 A=0.85，10=3.08）。
+     - 洗牌後重置（A=24, 0.08, 0.85）。
+     - 概率總和 ≈ 1.0，張數總和 = 312。
+   - 確認視窗保留最終數據，僅在「清除 Log」或手動關閉時清空。
+3. **驗證洗牌邏輯**：
+   - 模擬 1000 局 × 2 玩家，檢查 Log 是否記錄洗牌事件（例如「牌堆剩餘 124 張，低於 40%」）。
+   - 確認洗牌觸發時剩餘牌數 ≈ 124 張，牌堆恢復為 312 張。
+   - 檢查即時數值區域的「總剩餘牌數」和「洗牌倒計時」是否同步。
+4. **驗證圖表**：
+   - 模擬 1000 局，選擇「最終手牌點數分佈」或「爆牌率比較」，確認無 `TclError`，圖表清晰，繁體中文正常。
+5. **驗證 Log**：
+   - 模擬 10 局 × 2 玩家，檢查 Log 是否按局數排列（「第 1 局：玩家 1、玩家 2」）。
+   - 確認滾動條順暢，自動滾動有效。
+6. **驗證穩定性**：
+   - 模擬 1000 局 × 10 玩家，確認無卡頓或崩潰。
+   - 檢查錯誤日誌（例如「圖表更新失敗」），確保穩定運行。
 
-啟動應用程式：
-python src/main.py
+## 檔案結構
 
-
-圖形介面操作：
-
-選擇策略：勾選要模擬的策略（預設全選）。
-設定參數：輸入模擬局數（預設 1000 局）和玩家數量（預設 1 人，最大 10 人）。
-圖表類型：選擇「最終手牌點數分佈」或「爆牌率比較」。
-顯示日誌：勾選以顯示詳細牌局日誌。
-設定：調整主題、字型大小和更新間隔。
-開始/停止：啟動或停止模擬。
-清除日誌：重置日誌和統計顯示。
-
-
-輸出結果：
-
-即時統計：顯示剩餘牌數、洗牌倒計時、平均點數、爆牌率和期望值。
-圖表：儲存於 img/ 目錄（例如 img/strategy_comparison.png、img/<strategy>_distribution.png）。
-分析報告：儲存為 reports/analysis_report.md，包含策略比較和分析結論。
-
-
-
-專案結構
+```plaintext
 blackjack-simulator/
-├── src/
-│   ├── gui.py                 # 使用 tkinter 和 ttkbootstrap 實現圖形介面
-│   ├── analysis_report.py     # 生成 Markdown 報告和期望值比較圖表
-│   ├── main.py                # 應用程式入口
-│   ├── blackjack_simulation.py # 核心模擬邏輯，實現各種策略
-│   ├── deck.py                # 牌堆管理和抽牌邏輯
-│   ├── result_plotter.py      # 圖表生成函數
-├── config/
-│   ├── settings.json          # 主題、字型大小和更新間隔的設定
-├── img/
-│   ├── .gitkeep               # 保留空目錄
-│   ├── (生成的圖表)          # 儲存圖表，如 strategy_comparison.png
-├── reports/
-│   ├── .gitkeep               # 保留空目錄
-│   ├── (生成的報告)          # 儲存報告，如 analysis_report.md
-├── README.md                  # 專案說明文件
-├── requirements.txt           # Python 依賴項清單
-├── .gitignore                 # Git 忽略檔案
+├── main.py                 # 主程式入口
+├── gui.py                  # GUI 實現（主視窗、即時數值、期望值視窗）
+├── blackjack_simulation.py # 模擬邏輯（策略、洗牌）
+├── deck.py                 # 牌堆管理（含回收已用牌）
+├── result_plotter.py       # 圖表生成
+├── analysis_report.py      # 報告生成
+├── settings.json           # 設定檔（主題、字號等）
+├── README.md               # 本文件
+└── output/                 # 輸出目錄（圖表、報告）
+```
 
-依賴項
-請參閱 requirements.txt 獲取完整清單。主要依賴包括：
+## 貢獻指南
 
-Python 3.8+
-tkinter（通常隨 Python 附帶）
-ttkbootstrap 用於圖形介面樣式
-matplotlib 用於圖表繪製
-numpy 用於數值計算
-Pillow 用於圖片處理
+歡迎對本專案進行貢獻！請遵循以下步驟：
 
-注意事項
+1. **Fork 倉庫**：
+   - 點擊 GitHub 頁面右上角的「Fork」按鈕，創建你的倉庫副本。
+2. **克隆並創建分支**：
+   ```bash
+   git clone https://github.com/your-username/blackjack-simulator.git
+   cd blackjack-simulator
+   git checkout -b feature/your-feature
+   ```
+3. **提交更改**：
+   - 修改程式碼，確保符合 PEP 8 規範。
+   - 提交更改：
+     ```bash
+     git add .
+     git commit -m "Add feature: your feature description"
+     git push origin feature/your-feature
+     ```
+4. **創建 Pull Request**：
+   - 在 GitHub 上提交 Pull Request，描述你的更改和目的。
+   - 等待審核並回應反饋。
 
-字型設定：圖表預設使用微軟正黑體（C:/Windows/Fonts/msjh.ttc）。若不可用，程式會回退到 sans-serif 字型，可能影響中文顯示。
-目錄要求：請確保 img/ 和 reports/ 目錄可寫入，圖表和報告將儲存於此。
-模擬規模：大量的局數或玩家數可能增加運行時間。透過設定中的更新間隔平衡響應速度和效能。
-執行緒安全：模擬在獨立執行緒中運行以保持圖形介面響應，但停止模擬可能需要片刻完成。
+### 貢獻建議
+- 新增策略（例如基於特定牌型的高級策略）。
+- 增強即時數值（例如每種牌值的出現次數）。
+- 優化性能（例如限制 Log 顯示局數）。
+- 支援多語言（例如英文 UI）。
 
-貢獻
-歡迎貢獻！請遵循以下步驟：
+## 已知問題
 
-Fork 本儲存庫。
-建立功能分支（git checkout -b feature/your-feature）。
-提交變更（git commit -m "Add your feature"）。
-推送至分支（git push origin feature/your-feature）。
-提交 Pull Request。
+- **Log 卡頓**：1000 局 × 多玩家可能導致 Log 顯示緩慢，可考慮限制顯示最近 100 局。
+- **繁體中文顯示**：若無微軟正黑體，需安裝備用字體（如 Noto Sans CJK TC）。
+- **圖表更新**：高頻更新（小 `update_interval`）可能引發 `TclError`，建議設為 100 局以上。
 
-授權
-本專案採用 MIT 授權，詳情請見 LICENSE 文件（待新增）。
-致謝
+如發現問題，請在 [Issues](https://github.com/your-username/blackjack-simulator/issues) 提交，包含截圖、錯誤訊息和依賴版本（`pip list`）。
 
-使用 tkinter、ttkbootstrap 和 matplotlib 構建。
-靈感來自 21 點策略分析與模擬專案。
+## 許可證
 
+本專案採用 [MIT 許可證](LICENSE)。你可以自由使用、修改和分發程式碼，但請保留原始作者資訊。
+
+## 聯繫方式
+
+- **作者**：你的名字
+- **電子郵件**：your.email@example.com
+- **GitHub**：[@your-username](https://github.com/your-username)
+
+感謝使用 21 點莊家策略模擬器！期待你的反饋和貢獻！
